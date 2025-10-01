@@ -1,7 +1,7 @@
 # 🎬 XÂY DỰNG WEBSITE QUẢN LÝ RẠP CHIẾU PHIM
 
 ## 📌 Giới thiệu
-Dự án được phát triển nhằm xây dựng một hệ thống **quản lý rạp chiếu phim** với đầy đủ tính năng cho khách hàng, chủ rạp và nhân viên.  
+Dự án được phát triển nhằm xây dựng một hệ thống **quản lý rạp chiếu phim** với đầy đủ tính năng cho khách hàng và chủ rạp phim.  
 Hệ thống cho phép đặt vé, quản lý suất chiếu, quản lý phim, theo dõi doanh thu và hỗ trợ nhiều tiện ích khác.
 
 ---
