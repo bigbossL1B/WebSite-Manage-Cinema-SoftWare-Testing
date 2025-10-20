@@ -8,15 +8,14 @@ Hệ thống cho phép đặt vé, quản lý suất chiếu, quản lý phim, t
 
 ## 🛠️ Công nghệ sử dụng
 ### 🔹 Frontend
-- **Themelyf** (UI Framework)
+- **Thymeleaf** (UI Framework)
 - **HTML, CSS, JavaScript**
 
 ### 🔹 Backend
 - **Spring Boot** (Java)
-- **RESTful API**
 
 ### 🔹 Cơ sở dữ liệu
-- **MySQL / PostgreSQL**
+- **MySQL**
 
 ---
 
