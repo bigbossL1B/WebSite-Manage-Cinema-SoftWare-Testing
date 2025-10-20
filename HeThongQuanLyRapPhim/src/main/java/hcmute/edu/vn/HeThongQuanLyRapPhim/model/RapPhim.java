@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -104,33 +105,60 @@ public class RapPhim implements Serializable {
 
     // Lấy danh sách suất chiếu của 1 rạp phim dựa trên ngày chiếu và hình thức chiếu
     public List<SuatChieu> layDanhSachSuatChieu(LocalDate ngayChieu, HinhThucChieu hinhThucChieu, Phim phim) {
-        return getDsPhongChieuPhim().stream()
-                .flatMap(pc -> pc.getDsSuatChieu().stream())
-                .filter(sc -> sc.getNgayGioChieu().toLocalDate().equals(ngayChieu) &&
-                        sc.getHinhThucChieu().equals(hinhThucChieu) &&
-                        sc.getNgayGioChieu().isAfter(LocalDateTime.now()) &&
-                        sc.getPhim().equals(phim))
-                .toList();
+        // 1. Khởi tạo một danh sách rỗng để chứa kết quả
+        List<SuatChieu> danhSachKetQua = new ArrayList<>();
+
+        // 2. Lặp qua danh sách các phòng chiếu
+        for (PhongChieuPhim pc : getDsPhongChieuPhim()) {
+            // 3. Lặp qua danh sách các suất chiếu trong mỗi phòng chiếu
+            for (SuatChieu sc : pc.getDsSuatChieu())  {
+
+                // 4. Kiểm tra tất cả các điều kiện tương tự như mệnh đề .filter()
+                boolean cungNgayChieu = sc.getNgayGioChieu().toLocalDate().equals(ngayChieu);
+                boolean cungHinhThucChieu = sc.getHinhThucChieu().equals(hinhThucChieu);
+                boolean laSuatChieuTuongLai = sc.getNgayGioChieu().isAfter(LocalDateTime.now());
+                boolean cungPhim = sc.getPhim().equals(phim);
+
+                // 5. Nếu suất chiếu thỏa mãn tất cả các điều kiện
+                if (cungNgayChieu  && cungHinhThucChieu  && laSuatChieuTuongLai  && cungPhim)  {
+                    // Thêm suất chiếu này vào danh sách kết quả
+                    danhSachKetQua.add(sc);
+                }
+            }
+        }
+        // 6. Trả về danh sách đã lọc
+        return danhSachKetQua;
     }
 
     // Tính tổng doanh thu từng tháng
     public double tongDoanhThuTungThang(int thang, int nam) {
-        // Lấy ngày đầu tháng và ngày cuối tháng
+        // Biến để tích lũy tổng doanh thu
+        double tongDoanhThu = 0.0;
+        // Lấy ngày đầu và ngày cuối của tháng để làm mốc so sánh
         LocalDateTime startOfMonth = LocalDate.of(nam, thang, 1).atStartOfDay();
         LocalDateTime endOfMonth = LocalDate.of(nam, thang, 1)
                 .with(TemporalAdjusters.lastDayOfMonth())
                 .atTime(LocalTime.MAX);
-
-        return  getDsPhongChieuPhim().stream()
-                .flatMap(pc -> pc.getDsSuatChieu().stream())
-                .flatMap(sc -> sc.getDsHoaDon().stream())
-                .filter(hd -> {
+        // Lặp qua danh sách các phòng chiếu
+        for (PhongChieuPhim pc : getDsPhongChieuPhim())  {
+            // Với mỗi phòng chiếu, lặp qua danh sách các suất chiếu
+            for (SuatChieu sc : pc.getDsSuatChieu())  {
+                // Với mỗi suất chiếu, lặp qua danh sách các hóa đơn
+                for (HoaDon hd : sc.getDsHoaDon())  {
                     LocalDateTime ngayThanhToan = hd.getNgayThanhToan();
-                    return (ngayThanhToan.isEqual(startOfMonth) || ngayThanhToan.isAfter(startOfMonth)) &&
-                            (ngayThanhToan.isEqual(endOfMonth) || ngayThanhToan.isBefore(endOfMonth)) &&
-                            hd.getTrangThaiHoaDon().equals(TrangThaiHoaDon.DA_THANH_TOAN);
-                })
-                .mapToDouble(HoaDon::getTongGiaTien).sum();
+                    // Điều kiện lọc tương đương với mệnh đề filter() trong stream
+                    boolean ngayHopLe = (ngayThanhToan.isEqual(startOfMonth) || ngayThanhToan.isAfter(startOfMonth)) &&
+                            (ngayThanhToan.isEqual(endOfMonth) || ngayThanhToan.isBefore(endOfMonth));
+                    boolean daThanhToan = hd.getTrangThaiHoaDon().equals(TrangThaiHoaDon.DA_THANH_TOAN);
+                    // Nếu hóa đơn thỏa mãn tất cả điều kiện
+                    if (ngayHopLe  && daThanhToan  ) {
+                        // Cộng dồn tổng tiền vào biến tổng doanh thu
+                        tongDoanhThu += hd.getTongGiaTien();
+                    }
+                }
+            }
+        }
+        return tongDoanhThu;
     }
 
     // Tính doanh thu của từng bộ phim trong 1 tháng
