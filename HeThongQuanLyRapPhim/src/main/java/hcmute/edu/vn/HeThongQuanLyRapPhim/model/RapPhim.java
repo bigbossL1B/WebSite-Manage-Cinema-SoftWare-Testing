@@ -141,18 +141,31 @@ public class RapPhim implements Serializable {
                 .with(TemporalAdjusters.lastDayOfMonth())
                 .atTime(LocalTime.MAX);
 
-        return getDsPhongChieuPhim().stream()
-                .flatMap(pc -> pc.getDsSuatChieu().stream())
-                .filter(sc -> sc.getPhim().equals(phim))
-                .flatMap(sc -> sc.getDsHoaDon().stream())
-                .filter(hd -> {
-                    LocalDateTime ngayThanhToan = hd.getNgayThanhToan();
-                    return (ngayThanhToan.isEqual(startOfMonth) || ngayThanhToan.isAfter(startOfMonth)) &&
-                            (ngayThanhToan.isEqual(endOfMonth) || ngayThanhToan.isBefore(endOfMonth)) &&
-                            hd.getTrangThaiHoaDon().equals(TrangThaiHoaDon.DA_THANH_TOAN);
-                })
-                .mapToDouble(HoaDon::getTongGiaTien)
-                .sum();
+        double tongDoanhThu = 0.0;
+
+        // Duyệt qua danh sách phòng chiếu
+        for (PhongChieuPhim pc : getDsPhongChieuPhim()) {
+            // Duyệt qua danh sách suất chiếu của phòng chiếu đó
+            for (SuatChieu sc : pc.getDsSuatChieu()) {
+                // Chỉ tính nếu suất chiếu thuộc về bộ phim cần tính
+                if (sc.getPhim().equals(phim)) {
+                    // Duyệt qua danh sách hóa đơn của suất chiếu
+                    for (HoaDon hd : sc.getDsHoaDon()) {
+                        LocalDateTime ngayThanhToan = hd.getNgayThanhToan();
+
+                        // Kiểm tra ngày thanh toán nằm trong tháng và trạng thái đã thanh toán
+                        if (
+                                (hd.getTrangThaiHoaDon().equals(TrangThaiHoaDon.DA_THANH_TOAN)) &&
+                                        (ngayThanhToan.isEqual(startOfMonth) || ngayThanhToan.isAfter(startOfMonth)) &&
+                                        (ngayThanhToan.isEqual(endOfMonth) || ngayThanhToan.isBefore(endOfMonth))
+                        ) {
+                            tongDoanhThu += hd.getTongGiaTien();
+                        }
+                    }
+                }
+            }
+        }
+        return tongDoanhThu;
     }
 
     // Tính số lượng từng combo bán ra trong 1 tháng
@@ -163,17 +176,31 @@ public class RapPhim implements Serializable {
                 .with(TemporalAdjusters.lastDayOfMonth())
                 .atTime(LocalTime.MAX);
 
-        return getDsPhongChieuPhim().stream()
-                .flatMap(pc -> pc.getDsSuatChieu().stream())
-                .flatMap(sc -> sc.getDsHoaDon().stream())
-                .filter(hd -> {
+        int tongSoLuong = 0;
+
+        // Duyệt qua từng phòng chiếu
+        for (PhongChieuPhim pc : getDsPhongChieuPhim()) {
+            for (SuatChieu sc : pc.getDsSuatChieu()) {
+                for (HoaDon hd : sc.getDsHoaDon()) {
                     LocalDateTime ngayThanhToan = hd.getNgayThanhToan();
-                    return (ngayThanhToan.isEqual(startOfMonth) || ngayThanhToan.isAfter(startOfMonth)) &&
-                            (ngayThanhToan.isEqual(endOfMonth) || ngayThanhToan.isBefore(endOfMonth));
-                })
-                .flatMap(hd -> hd.getDsComBoDaMua().stream())
-                .filter(chiTietComBoBapNuoc -> chiTietComBoBapNuoc.getComboBapNuoc().equals(comboBapNuoc))
-                .mapToInt(ChiTietComBoBapNuoc::getSoLuong)
-                .sum();
+
+                    // Gộp tất cả điều kiện kiểm tra vào một if duy nhất
+                    if (
+                            hd.getTrangThaiHoaDon().equals(TrangThaiHoaDon.DA_THANH_TOAN) &&
+                                    (ngayThanhToan.isEqual(startOfMonth) || ngayThanhToan.isAfter(startOfMonth)) &&
+                                    (ngayThanhToan.isEqual(endOfMonth) || ngayThanhToan.isBefore(endOfMonth))
+                    ) {
+                        // Duyệt qua từng combo trong hóa đơn
+                        for (ChiTietComBoBapNuoc chiTiet : hd.getDsComBoDaMua()) {
+                            if (chiTiet.getComboBapNuoc().equals(comboBapNuoc)) {
+                                tongSoLuong += chiTiet.getSoLuong();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return tongSoLuong;
     }
 }

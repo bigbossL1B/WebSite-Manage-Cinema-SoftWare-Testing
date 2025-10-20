@@ -22,14 +22,16 @@ public class VNPayServiceImpl implements VNPayService {
     private final PopcornDrinkComboRepository popcornDrinkComboRepository;
     private final EmailService emailService;
     private final DiscountRepository discountRepository;
+    private final VNPayConfig vnpayConfig;
 
     @Autowired
-    public VNPayServiceImpl(InvoiceRepository invoiceRepository, ChairRepository chairRepository, PopcornDrinkComboRepository popcornDrinkComboRepository, EmailService emailService, DiscountRepository discountRepository) {
+    public VNPayServiceImpl(InvoiceRepository invoiceRepository, ChairRepository chairRepository, PopcornDrinkComboRepository popcornDrinkComboRepository, EmailService emailService, DiscountRepository discountRepository,VNPayConfig vnpayConfig) {
         this.invoiceRepository = invoiceRepository;
         this.chairRepository = chairRepository;
         this.popcornDrinkComboRepository = popcornDrinkComboRepository;
         this.emailService = emailService;
         this.discountRepository = discountRepository;
+        this.vnpayConfig = vnpayConfig;
     }
 
     @Override
@@ -48,7 +50,7 @@ public class VNPayServiceImpl implements VNPayService {
         String bankCode = "";
         String vnp_TxnRef = VNPayConfig.getRandomNumber(8);
 //        String vnp_IpAddr = "127.0.0.1";
-        String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
+        String vnp_TmnCode = vnpayConfig.getTmnCode();
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", vnp_Version);
@@ -62,7 +64,7 @@ public class VNPayServiceImpl implements VNPayService {
         vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
         vnp_Params.put("vnp_OrderType", orderType);
         vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl);
+        vnp_Params.put("vnp_ReturnUrl", vnpayConfig.getReturnUrl());
         vnp_Params.put("vnp_IpAddr", clientIp);
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
@@ -97,9 +99,9 @@ public class VNPayServiceImpl implements VNPayService {
         if (!hashData.isEmpty())
             hashData.setLength(hashData.length() - 1);
 
-        String vnp_SecureHash = VNPayConfig.hmacSHA512(VNPayConfig.secretKey, hashData.toString());
+        String vnp_SecureHash = VNPayConfig.hmacSHA512(vnpayConfig.getHashSecret(), hashData.toString());
         query.append("&vnp_SecureHash=").append(vnp_SecureHash);
-        return VNPayConfig.vnp_PayUrl + "?" + query;
+        return vnpayConfig.getPayUrl() + "?" + query;
 
     }
     @Override

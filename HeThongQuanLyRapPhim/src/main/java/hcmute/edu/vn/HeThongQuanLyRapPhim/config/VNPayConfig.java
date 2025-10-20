@@ -1,15 +1,42 @@
 package hcmute.edu.vn.HeThongQuanLyRapPhim.config;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
+@Configuration
 public class VNPayConfig {
-    public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_ReturnUrl = "https://phimhay.azurewebsites.net/payment/vnpay-return";
-    public static String vnp_TmnCode = "1CGVCIDX";
-    public static String secretKey = "Z885THWIX6HH2MOC8MUYB0O6JPWN9VLW";
+    @Value("${vnpay.vnp_TmnCode}")
+    private String tmnCode;
+
+    @Value("${vnpay.vnp_HashSecret}")
+    private String hashSecret;
+
+    @Value("${vnpay.vnp_Url}")
+    private String payUrl;
+
+    @Value("${vnpay.vnp_ReturnUrl}")
+    private String returnUrl;
+
+    public String getTmnCode() {
+        return tmnCode;
+    }
+
+    public String getHashSecret() {
+        return hashSecret;
+    }
+
+    public String getPayUrl() {
+        return payUrl;
+    }
+
+    public String getReturnUrl() {
+        return returnUrl;
+    }
 
     public static String hmacSHA512(final String key, final String data) {
         try {
